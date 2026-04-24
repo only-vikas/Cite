@@ -1,35 +1,138 @@
-# Cite
+# 📝 VisualEditor: Auto-Insert References Header
 
-The Cite extension to MediaWiki provides a way for wiki editors to add references and footnotes to articles.
+[![MediaWiki Extension](https://img.shields.io/badge/MediaWiki-Extension-006699?style=for-the-badge&logo=wikipedia)](https://www.mediawiki.org/)
+[![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)](#)
+[![PHP](https://img.shields.io/badge/PHP-8.1+-777BB4?style=for-the-badge&logo=php&logoColor=white)](#)
+[![License: GPL v2](https://img.shields.io/badge/License-GPL%20v2-blue.svg?style=for-the-badge)](https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html)
 
-See [mw:Extension:Cite] for technical documentation on installing and configuring the extension.  See [mw:Help:Cite] for user documentation.
+> A smart enhancement for the MediaWiki `Cite` extension that automatically detects and injects a localized Level 2 section heading when a user inserts a References list via VisualEditor.
 
-Cite is responsible for implementing the `<ref>` and `<references>` tags in wikitext.  Integrations are provided for the MediaWiki wikitext parser, Parsoid, [WikiEditor], [VisualEditor], and the reading interface.
+## 📖 Description
 
-## Terminology
+In MediaWiki's VisualEditor (VE), users frequently insert a "References list" after adding citations to an article. However, newer editors often forget to manually create a `== References ==` section heading beforehand, resulting in orphaned reference blocks at the bottom of pages. 
 
-* CE – ContentEditable, see [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Global_attributes/contenteditable)
-* Cite – Citation, the act of referencing a source.
-* DC – Dublin Core, used as a prefix in Parsoid's RDFa.
-* Details – Attribute that marks a sub-reference as such as well as provides the sub-reference's extra content.
-* DM – Data model
-* List-defined reference (LDR) – When a named `<ref>` is defined inside of a `<references>` section.
-* MW – MediaWiki
-* MWT – MediaWiki transclusion. Used by Parsoid in e.g. `about="#mwt1"`. This "about id" marks a "DOM forest" of un-nested siblings as belonging to the same template transclusion. More in the [Parsoid DOM spec](https://www.mediawiki.org/wiki/Specs/HTML/2.8.0#DOM_Ranges).
-* Note – An item in the reference list, a.k.a. a "footnote". Link targets use "note" since the first 2005 draft of this extension. [More details](docs/backlink-anchor-format.md).
-* Ref – Reference
-* Reflist – Refers to either community-maintained `{{reflist}}` templates or the raw `<references>` tag that marks the position in the article where the reference list should appear.
-* SA – Standalone
-* Selser – Selective serializer, an extra step in Parsoid's HTML to wikitext serialization to minimize the diff.
-* VE – [VisualEditor]
-* WT – Wikitext
+This patch introduces **context-aware DOM manipulation** to the `ve-cite` module. When a user triggers the "Insert References list" command, the script:
+1. Traverses the document model to check if a relevant heading already exists.
+2. If missing, automatically generates a localized Level 2 heading (e.g., "References").
+3. Inserts both the heading and the reference list block in a single, seamless undoable transaction.
+4. Includes a wiki-configurable default state (via `i18n` translation keys) allowing specific wikis to disable the auto-insertion if desired.
 
-## History
-* The Cite extension was actually meant to implement a `<cite>` tag in [2005](https://phabricator.wikimedia.org/rECITfcbbd70a). Because that conflicts with the HTML tag it became `<citation>` the [same day](https://phabricator.wikimedia.org/rECIT2e67b02c). In 2014 the tag was [removed](https://gerrit.wikimedia.org/r/149593) and moved to a separate [CiteThisPage](https://www.mediawiki.org/wiki/Extension:CiteThisPage) extension, along with the [Special:Cite](https://www.mediawiki.org/wiki/Special:CiteThisPage/Extension:CiteThisPage) special page.
-* The original [2005](https://phabricator.wikimedia.org/rECITb714bf09) draft of this extension suggested a `<ref[ key]>` syntax, e.g. `<ref Britannica>…</ref>`, and called that concept "key". This was changed to `<ref name="Britannica">` just [3 days](https://phabricator.wikimedia.org/rECITb2711042) later. Still the term "key" remained in various places. See [T299280](https://phabricator.wikimedia.org/T299280#9384546) for the full history.
-* A 2019 draft suggested an alternate sub-referencing syntax where `<ref extends="Britannica">` was meant to address a parent reference by name. This got replaced with the `details="…"` syntax in 2025.
+---
 
-[mw:Extension:Cite]: https://www.mediawiki.org/wiki/Special:MyLanguage/Extension:Cite
-[mw:Help:Cite]: https://www.mediawiki.org/wiki/Special:MyLanguage/Help:Cite
-[VisualEditor]: https://www.mediawiki.org/wiki/Special:MyLanguage/Extension:VisualEditor
-[WikiEditor]: https://www.mediawiki.org/wiki/Special:MyLanguage/Extension:WikiEditor
+## 📑 Table of Contents
+- [Description](#-description)
+- [Screenshots](#-screenshots)
+- [Tech Stack](#-tech-stack)
+- [Installation](#-installation)
+- [Usage](#-usage)
+- [Contributing](#-contributing)
+- [Credits & Acknowledgements](#-credits--acknowledgements)
+- [License](#-license)
+- [Contact](#-contact)
+
+---
+
+## 📸 Screenshots
+
+Here is a step-by-step look at the feature in action within the VisualEditor environment:
+
+| 1. Adding Citations | 
+|:---:|:---:|
+| ![Adding Citations] <img width="1893" height="945" alt="Screenshot (138)" src="https://github.com/user-attachments/assets/9ddaf170-2691-4206-a75d-abca48da76ca" />
+
+|2. Editing References |
+ | ![Editing References] <img width="1920" height="923" alt="Screenshot (139)" src="https://github.com/user-attachments/assets/a0e85e5f-7d5a-415d-ad6f-1ffa41b48254" />
+ |
+| *User adds footnotes to the article text using the VisualEditor Cite tool.* | *Interacting with the generated citation block.* |
+
+| 3. The Insertion Process | 
+|:---:|:---:|
+| ![Insertion Process] <img width="1920" height="945" alt="Screenshot (140)" src="https://github.com/user-attachments/assets/5ae2b936-cab0-4ddb-a726-3c55f1eccf4a" />
+
+ | 4. Smart Auto-Heading Output |
+| ![Final Output] <img width="1908" height="931" alt="Screenshot (141)" src="https://github.com/user-attachments/assets/b5bb6b83-59aa-44b9-83c8-af2557404425" />
+ |
+| *VisualEditor DOM updating the view as the command is executed.* | *The final output: The script automatically detects the missing header and injects the "References" H2 above the grey list block.* |
+
+---
+
+## 💻 Tech Stack
+
+* **Frontend Logic:** Object-Oriented JavaScript (ES6+), VisualEditor Data Model (`ve.dm`), VisualEditor Content Editable (`ve.ce`).
+* **Backend Integration:** PHP (MediaWiki Hooks, ExtensionRegistry).
+* **Internationalization (i18n):** MediaWiki JSON dictionary keys (`en.json`, `qqq.json`) for localization.
+* **Environment:** XAMPP, Apache, MySQL, Local MediaWiki Core (v1.45+).
+
+---
+
+## 🚀 Installation
+
+To test this code locally, you need a functioning MediaWiki core installation with the VisualEditor and Cite extensions enabled.
+
+1. **Clone the MediaWiki Core** (if you haven't already):
+   ```bash
+   git clone [https://gerrit.wikimedia.org/r/mediawiki/core.git](https://gerrit.wikimedia.org/r/mediawiki/core.git) mediawiki
+   cd mediawiki
+
+2. **Navigate to the Extensions directory and clone Cite:**
+
+Bash
+cd extensions
+git clone [https://gerrit.wikimedia.org/r/mediawiki/extensions/Cite.git](https://gerrit.wikimedia.org/r/mediawiki/extensions/Cite.git)
+cd Cite
+
+3. **Fetch this specific patch/branch:**
+https://gerrit.wikimedia.org/r/c/mediawiki/extensions/Cite/+/1248931
+
+
+4. **Enable the extension in your LocalSettings.php:**
+
+PHP
+wfLoadExtension( 'Cite' );
+
+## 🕹️ Usage
+
+Once the extension is installed and your local server is running:
+
+1. Open your local wiki in your browser (e.g., `http://localhost/mediawiki/index.php/Main_Page`).
+2. Append `?debug=true` to the URL to bypass the ResourceLoader cache and load fresh JavaScript.
+3. Click the **Edit** tab to launch VisualEditor.
+4. Type a sentence and add a footnote using the **Cite** button in the toolbar.
+5. In the top toolbar, click **Insert > More > References list**.
+6. The script will automatically insert a Level 2 `References` heading directly above the list block.
+
+---
+
+## 🤝 Contributing
+
+This project is part of the open-source Wikimedia ecosystem. 
+
+If you would like to contribute, please follow the standard Wikimedia Gerrit workflow rather than GitHub Pull Requests:
+
+1. Read the [Wikimedia Developer Guide](https://www.mediawiki.org/wiki/Developer_account).
+2. Push your patches to [Gerrit Code Review](https://gerrit.wikimedia.org/).
+3. Ensure all PHP and JavaScript code passes the Jenkins CI linters before requesting a review.
+
+---
+
+## 🏆 Credits & Acknowledgements
+
+* **Wikimedia Foundation:** For maintaining the core architecture of MediaWiki and VisualEditor.
+* **Mentorship:** Special thanks to senior Wikimedia architects **Ed Sanders (Esanders)** and **Thiemo Kreuz** for their extensive code reviews, architectural guidance on EditCheck integration, and deep insights into MediaWiki i18n standards.
+
+---
+
+## 📄 License
+
+Distributed under the **GPL-2.0-or-later** License. See the standard MediaWiki `COPYING` file or visit [GNU's website](https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html) for more information.
+
+---
+
+## 📫 Contact
+
+**Vikas** 
+* GitHub: https://github.com/only-vikas
+* LinkedIn: www.linkedin.com/in/vikaskannur
+* Email: vkannur504@gmaul.com
+
+Project Link: [https://github.com/your-github-username/your-repo-name](https://github.com/your-github-username/your-repo-name)

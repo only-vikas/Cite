@@ -135,4 +135,4 @@ Distributed under the **GPL-2.0-or-later** License. See the standard MediaWiki `
 * LinkedIn: www.linkedin.com/in/vikaskannur
 * Email: vkannur504@gmaul.com
 
-Project Link: [https://github.com/your-github-username/your-repo-name](https://github.com/your-github-username/your-repo-name)
+Project Link: https://github.com/only-vikas/Cite
